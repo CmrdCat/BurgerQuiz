@@ -1,4 +1,5 @@
 'use strict';
+const test = 1;
 
 document.addEventListener('DOMContentLoaded', function() {
    const btnOpenModal = document.querySelector('#btnOpenModal');
