@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   <img class="answerImg" src="${burgerImage}" alt="burger">
                   <span>${burgerName}</span>
                </label>
-            </div>
+            </div>  
             `
          
       };
