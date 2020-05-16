@@ -171,7 +171,6 @@ document.addEventListener('click',(event) => {
                   <span>${answer.title}</span>
                </label>
                `;
-
             formAnswers.appendChild(answerItem);
          });
       };
