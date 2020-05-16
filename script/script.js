@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
    const burgerMenu = document.querySelector('#burgerMenu');
    const prevButton = document.querySelector('#prev');
    const nextButton = document.querySelector('#next');
+   const modalDialog = document.querySelector('.modal-dialog');
 
 
    const questions = [
@@ -86,6 +87,21 @@ document.addEventListener('DOMContentLoaded', function() {
       }
    ];
 
+   let count = -100;
+   let interval;
+   modalDialog.style.top = count + `%`;
+
+   const animateModal = () => {
+      modalDialog.style.top = count + `%`;
+      count += 1.5;
+      interval = requestAnimationFrame(animateModal);
+
+      if (count > 0) {
+         cancelAnimationFrame(interval);
+         count = -100;
+      }
+   }
+
 
    burgerMenu.style.display = "none";
 
@@ -118,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
    btnOpenModal.addEventListener('click',() => {
+      interval = requestAnimationFrame(animateModal);
       modalBlock.classList.add('d-block');
       playTest();
    });
@@ -134,6 +151,8 @@ document.addEventListener('click',(event) => {
       ){
       modalBlock.classList.remove('d-block');
       burgerMenu.classList.remove("active");
+      cancelAnimationFrame(interval);
+      count = -100;
    }
 })
 
@@ -144,7 +163,7 @@ document.addEventListener('click',(event) => {
          questions[index].answers.forEach((answer) => {
             const answerItem = document.createElement('div');
 
-            answerItem.classList.add('answers-item', 'd-flex', 'flex-column');
+            answerItem.classList.add('answers-item', 'd-flex', 'justify-content-center');
             answerItem.innerHTML = `
             <input type="${questions[index].type}" id="${answer.title}" name="answer" class="d-none">
                <label for="${answer.title}" class="d-flex flex-column justify-content-between">
@@ -163,7 +182,6 @@ document.addEventListener('click',(event) => {
          questionTitle.textContent = `${questions[indexQuestion].question}`;
 
          renderAnswers(indexQuestion);
-         console.log(indexQuestion,questions.length)
 
          if (indexQuestion < 1) {
             prevButton.style.display = "none"
@@ -187,7 +205,11 @@ document.addEventListener('click',(event) => {
          numberQuestion--;
          renderQuestions(numberQuestion);
       };
-   }
+   };
+
+   
+
+
 })
 
 //Помещая код в document.addEventListener 'DOMContentLoaded'
