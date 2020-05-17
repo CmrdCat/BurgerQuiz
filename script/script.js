@@ -1,5 +1,6 @@
 'use strict';
 
+//Обработчик событий, скрипт будет загружаться только после загрузки html документа
 document.addEventListener('DOMContentLoaded', function() {
    const btnOpenModal = document.querySelector('#btnOpenModal');
    const modalBlock = document.querySelector('#modalBlock');
@@ -10,8 +11,9 @@ document.addEventListener('DOMContentLoaded', function() {
    const prevButton = document.querySelector('#prev');
    const nextButton = document.querySelector('#next');
    const modalDialog = document.querySelector('.modal-dialog');
+   const sendButton = document.querySelector('#send');
 
-
+//Содержит в себе элементы для вопросов
    const questions = [
       {
          question: "Какого цвета бургер?",
@@ -87,6 +89,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
    ];
 
+
+// Установка анимации для модального окна.
+// Окно плавно спускается с верхнего края экрана
    let count = -100;
    let interval;
    modalDialog.style.top = count + `%`;
@@ -104,8 +109,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
    burgerMenu.style.display = "none";
-
-   let clientWidth = document.documentElement.clientWidth; //Присваиваем в переменную ширину экрана при загрузке страницы
+//Присваиваем в переменную ширину экрана при загрузке страницы
+   let clientWidth = document.documentElement.clientWidth; 
    
    if (clientWidth < 768) {
       burgerMenu.style.display = "flex";
@@ -132,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-
+//Открытие и закрытие модального окна
    btnOpenModal.addEventListener('click',() => {
       interval = requestAnimationFrame(animateModal);
       modalBlock.classList.add('d-block');
@@ -143,6 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
       burgerMenu.classList.remove("active");
    });
 
+//Закрттие модального окна через клик вне окна
 document.addEventListener('click',(event) => {
    if (
       !event.target.closest('.modal-dialog') && 
@@ -154,18 +160,21 @@ document.addEventListener('click',(event) => {
       cancelAnimationFrame(interval);
       count = -100;
    }
-})
+});
 
+//Запуск теста по нажатию на кнопку
    const playTest = () => {
-      let numberQuestion = 0;
 
+      const finalAnswers = [] ;
+      let numberQuestion = 0;
+//Функция рендера  ответов из переменной выше
       const renderAnswers = (index) => {
          questions[index].answers.forEach((answer) => {
             const answerItem = document.createElement('div');
 
             answerItem.classList.add('answers-item', 'd-flex', 'justify-content-center');
             answerItem.innerHTML = `
-            <input type="${questions[index].type}" id="${answer.title}" name="answer" class="d-none">
+            <input type="${questions[index].type}" id="${answer.title}" name="answer" class="d-none" value="${answer.title}">
                <label for="${answer.title}" class="d-flex flex-column justify-content-between">
                   <img class="answerImg" src="${answer.url}" alt="burger">
                   <span>${answer.title}</span>
@@ -174,34 +183,94 @@ document.addEventListener('click',(event) => {
             formAnswers.appendChild(answerItem);
          });
       };
-
+//Функция чтения вопросов из переменной выше и вызов функции рендера ответов
       const renderQuestions = (indexQuestion) => {
          formAnswers.innerHTML = '';
 
-         questionTitle.textContent = `${questions[indexQuestion].question}`;
 
-         renderAnswers(indexQuestion);
+         switch(true) {
+            case (numberQuestion >= 0 && numberQuestion <= questions.length - 1):
+               questionTitle.textContent = `${questions[indexQuestion].question}`;
+               renderAnswers(indexQuestion);
+               nextButton.classList.remove('d-none');
+               prevButton.classList.remove('d-none');
+               sendButton.classList.add('d-none');
+               nextButton.textContent = "Вперёд";
+               prevButton.textContent = "Назад";
+               console.log(numberQuestion);
+               switch(true) {
+                  case (numberQuestion === 0):
+                     prevButton.classList.add('d-none');
+                     break;
 
-         if (indexQuestion < 1) {
-            prevButton.style.display = "none"
-         } else {
-            prevButton.style.display = "flex"
-         };
-         if (indexQuestion >= questions.length - 1) {
-            nextButton.style.display = "none"
-         } else {
-            nextButton.style.display = "flex"
+                  case (numberQuestion === questions.length - 1):
+                     nextButton.textContent = "Закончить опрос";
+                     break;
+               };
+            case (numberQuestion >= questions.length):
+               switch(true) {
+                  case (numberQuestion === questions.length):
+                     nextButton.classList.add('d-none');
+                     sendButton.classList.remove('d-none');
+                     sendButton.textContent = "Отправить";
+                     prevButton.textContent = "Изменить выбор";
+                     questionTitle.textContent = "Отличный выбор! Оставьте данные для связи";
+                     formAnswers.innerHTML = `
+                  <div class="form-group">
+                     <label for="numberPhone">Введите номер телефона для связи</label>
+                     <input type="phone" class="form-control" id="numberPhone">
+                  </div>
+               `;
+                     break;
+
+                  case (numberQuestion === questions.length + 1):
+                     questionTitle.textContent = "Мы скоро свяжемся с вами";
+                     formAnswers.textContent = "Спасибо за пройденный тест!";
+                     sendButton.classList.add('d-none');
+                     prevButton.classList.add('d-none');
+                     setTimeout(() => {
+                        modalBlock.classList.remove('d-block');
+                     }, 3000);
+                     break;
+               }
+               
+
+            
          }
       };
+
+      const checkAnswer = () => {
+         const obj = {};
+         const inputs = [...formAnswers.elements].filter((input) => input.checked || input.id === 'numberPhone');
+         inputs.forEach((input, index) => {
+            switch(true) {
+               case (numberQuestion >= 0 && numberQuestion <= questions.length - 1):
+                  obj[`${index}_${questions[numberQuestion].question}`] = input.value;
+                  break;
+               case (numberQuestion === questions.length):
+                  obj[`Номер телефона`] = input.value;
+                  break;
+            }
+         })
+         finalAnswers.push(obj);
+         
+      }
+      //Запускаем функцию 
       renderQuestions(numberQuestion);
       
-
+//Функционал для кнопок <- и ->
       nextButton.onclick = () => {
+         checkAnswer();
          numberQuestion++;
          renderQuestions(numberQuestion);
       };
       prevButton.onclick = () => {
          numberQuestion--;
+         renderQuestions(numberQuestion);
+      };
+      sendButton.onclick = () => {
+         checkAnswer();
+         numberQuestion++;
          renderQuestions(numberQuestion);
       };
    };
@@ -210,7 +279,6 @@ document.addEventListener('click',(event) => {
 
 
 })
-
 //Помещая код в document.addEventListener 'DOMContentLoaded'
 //Остальной скрипт запустится только после полной загрузки DOM дерева
 
