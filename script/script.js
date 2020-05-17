@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
    const nextButton = document.querySelector('#next');
    const modalDialog = document.querySelector('.modal-dialog');
    const sendButton = document.querySelector('#send');
+   const modalTitle = document.querySelector('.modal-title');
 
 //Содержит в себе элементы для вопросов
    const questions = [
@@ -164,9 +165,10 @@ document.addEventListener('click',(event) => {
 
 //Запуск теста по нажатию на кнопку
    const playTest = () => {
-
+      const obj = {};
       const finalAnswers = [] ;
       let numberQuestion = 0;
+      modalTitle.textContent = "Ответьте на вопросы"
 //Функция рендера  ответов из переменной выше
       const renderAnswers = (index) => {
          questions[index].answers.forEach((answer) => {
@@ -186,9 +188,12 @@ document.addEventListener('click',(event) => {
 //Функция чтения вопросов из переменной выше и вызов функции рендера ответов
       const renderQuestions = (indexQuestion) => {
          formAnswers.innerHTML = '';
-
-
          switch(true) {
+            case (numberQuestion === 0):
+               questionTitle.textContent = `${questions[indexQuestion].question}`;
+               renderAnswers(indexQuestion);
+               prevButton.classList.add('d-none');
+               break;
             case (numberQuestion >= 0 && numberQuestion <= questions.length - 1):
                questionTitle.textContent = `${questions[indexQuestion].question}`;
                renderAnswers(indexQuestion);
@@ -198,49 +203,48 @@ document.addEventListener('click',(event) => {
                nextButton.textContent = "Вперёд";
                prevButton.textContent = "Назад";
                console.log(numberQuestion);
-               switch(true) {
-                  case (numberQuestion === 0):
-                     prevButton.classList.add('d-none');
-                     break;
-
-                  case (numberQuestion === questions.length - 1):
-                     nextButton.textContent = "Закончить опрос";
-                     break;
-               };
-            case (numberQuestion >= questions.length):
-               switch(true) {
-                  case (numberQuestion === questions.length):
-                     nextButton.classList.add('d-none');
-                     sendButton.classList.remove('d-none');
-                     sendButton.textContent = "Отправить";
-                     prevButton.textContent = "Изменить выбор";
-                     questionTitle.textContent = "Отличный выбор! Оставьте данные для связи";
-                     formAnswers.innerHTML = `
+               break;
+            case (numberQuestion === questions.length):
+               modalTitle.textContent = '';
+               nextButton.classList.add('d-none');
+               sendButton.classList.remove('d-none');
+               sendButton.textContent = "Отправить";
+               prevButton.textContent = "Изменить выбор";
+               questionTitle.textContent = "Отличный выбор! Оставьте данные для связи";
+               formAnswers.innerHTML = `
                   <div class="form-group">
                      <label for="numberPhone">Введите номер телефона для связи</label>
                      <input type="phone" class="form-control" id="numberPhone">
                   </div>
                `;
-                     break;
 
-                  case (numberQuestion === questions.length + 1):
-                     questionTitle.textContent = "Мы скоро свяжемся с вами";
-                     formAnswers.textContent = "Спасибо за пройденный тест!";
-                     sendButton.classList.add('d-none');
-                     prevButton.classList.add('d-none');
-                     setTimeout(() => {
-                        modalBlock.classList.remove('d-block');
-                     }, 3000);
-                     break;
+               const numberPhone = document.getElementById('numberPhone');
+               numberPhone.addEventListener('input', (event) => {
+                  event.target.value = event.target.value.replace(/[^0-9+-]/, "")
+               });
+
+               break;
+            case (numberQuestion === questions.length + 1):
+               questionTitle.textContent = "Мы скоро свяжемся с вами";
+               formAnswers.textContent = "Спасибо за пройденный тест!";
+               sendButton.classList.add('d-none');
+               prevButton.classList.add('d-none');
+
+               for (let key in obj) {
+                  let newObj = {};
+                  newObj[key] =obj[key];
+                  formAnswers.push(newObj)
                }
-               
 
-            
+               setTimeout(() => {
+                  modalBlock.classList.remove('d-block');
+               }, 5000);
+               break;
          }
       };
 
       const checkAnswer = () => {
-         const obj = {};
+         
          const inputs = [...formAnswers.elements].filter((input) => input.checked || input.id === 'numberPhone');
          inputs.forEach((input, index) => {
             switch(true) {
@@ -252,8 +256,6 @@ document.addEventListener('click',(event) => {
                   break;
             }
          })
-         finalAnswers.push(obj);
-         
       }
       //Запускаем функцию 
       renderQuestions(numberQuestion);
