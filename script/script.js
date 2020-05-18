@@ -14,81 +14,46 @@ document.addEventListener('DOMContentLoaded', function() {
    const sendButton = document.querySelector('#send');
    const modalTitle = document.querySelector('.modal-title');
 
-//Содержит в себе элементы для вопросов
-   const questions = [
-      {
-         question: "Какого цвета бургер?",
-         answers: [
-            {
-               title: 'Стандарт',
-               url: './image/burger.png'
-            },
-            {
-               title: 'Черный',
-               url: './image/burgerBlack.png'
-            }
-         ],
-         type: 'radio'
-      },
-      {
-         question: "Из какого мяса котлета?",
-         answers: [
-            {
-               title: 'Курица',
-               url: './image/chickenMeat.png'
-            },
-            {
-               title: 'Говядина',
-               url: './image/beefMeat.png'
-            },
-            {
-               title: 'Свинина',
-               url: './image/porkMeat.png'
-            }
-         ],
-         type: 'radio'
-      },
-      {
-         question: "Дополнительные ингредиенты?",
-         answers: [
-            {
-               title: 'Помидор',
-               url: './image/tomato.png'
-            },
-            {
-               title: 'Огурец',
-               url: './image/cucumber.png'
-            },
-            {
-               title: 'Салат',
-               url: './image/salad.png'
-            },
-            {
-               title: 'Лук',
-               url: './image/onion.png'
-            }
-         ],
-         type: 'checkbox'
-      },
-      {
-         question: "Добавить соус?",
-         answers: [
-            {
-               title: 'Чесночный',
-               url: './image/sauce1.png'
-            },
-            {
-               title: 'Томатный',
-               url: './image/sauce2.png'
-            },
-            {
-               title: 'Горчичный',
-               url: './image/sauce3.png'
-            }
-         ],
-         type: 'radio'
-      }
-   ];
+
+
+    // Your web app's Firebase configuration
+
+
+   const firebaseConfig = {
+      apiKey: "AIzaSyAPYNc0sa9ZIrijdidP8lDss1brvnZX0Po",
+      authDomain: "testburger-e3950.firebaseapp.com",
+      databaseURL: "https://testburger-e3950.firebaseio.com",
+      projectId: "testburger-e3950",
+      storageBucket: "testburger-e3950.appspot.com",
+      messagingSenderId: "410194197010",
+      appId: "1:410194197010:web:e5a9f7135724efd36eb6cb",
+      measurementId: "G-LCVMQ9YVJF"
+   };
+   // Initialize Firebase
+   firebase.initializeApp(firebaseConfig);
+   //Функция получения данных
+   const getData = () => {
+      formAnswers.textContent = "LOAD";   
+
+      nextButton.classList.add('d-none');
+      prevButton.classList.add('d-none');
+      modalTitle.textContent = "";
+      setTimeout(() => {
+         firebase.database().ref().child('questions').once('value')
+            .then(snap => playTest(snap.val()))
+      },1000)
+      
+
+   }
+
+   //Можно использовать этот код для подгрузки данных с JSON файла в корне
+   // fetch('./questions.json')
+   //    .then(res => res.json())
+   //    .then(obj => playTest(obj.questions))
+   //    .catch(err => {
+   //       formAnswers.textContent = "Ошибка загрузки данных";
+   //       console.error(err);
+   //     })
 
 
 // Установка анимации для модального окна.
@@ -142,7 +107,8 @@ document.addEventListener('DOMContentLoaded', function() {
    btnOpenModal.addEventListener('click',() => {
       interval = requestAnimationFrame(animateModal);
       modalBlock.classList.add('d-block');
-      playTest();
+      getData();
+
    });
    closeModal.addEventListener('click', () => {
       modalBlock.classList.remove('d-block');
@@ -164,7 +130,7 @@ document.addEventListener('click',(event) => {
 });
 
 //Запуск теста по нажатию на кнопку
-   const playTest = () => {
+   const playTest = (questions) => {
       const obj = {};
       const finalAnswers = [] ;
       let numberQuestion = 0;
@@ -189,11 +155,11 @@ document.addEventListener('click',(event) => {
       const renderQuestions = (indexQuestion) => {
          formAnswers.innerHTML = '';
          switch(true) {
-            case (numberQuestion === 0):
-               questionTitle.textContent = `${questions[indexQuestion].question}`;
-               renderAnswers(indexQuestion);
-               prevButton.classList.add('d-none');
-               break;
+            // case (numberQuestion === 0):
+            //    questionTitle.textContent = `${questions[indexQuestion].question}`;
+            //    renderAnswers(indexQuestion);
+            //    prevButton.classList.add('d-none');
+            //    break;
             case (numberQuestion >= 0 && numberQuestion <= questions.length - 1):
                questionTitle.textContent = `${questions[indexQuestion].question}`;
                renderAnswers(indexQuestion);
@@ -202,7 +168,9 @@ document.addEventListener('click',(event) => {
                sendButton.classList.add('d-none');
                nextButton.textContent = "Вперёд";
                prevButton.textContent = "Назад";
-               console.log(numberQuestion);
+               if (numberQuestion === 0) {                  
+                  prevButton.classList.add('d-none');
+               }
                break;
             case (numberQuestion === questions.length):
                modalTitle.textContent = '';
@@ -233,14 +201,16 @@ document.addEventListener('click',(event) => {
                for (let key in obj) {
                   let newObj = {};
                   newObj[key] =obj[key];
-                  formAnswers.push(newObj)
+                  finalAnswers.push(newObj);
                }
 
                setTimeout(() => {
                   modalBlock.classList.remove('d-block');
-               }, 5000);
+                  numberQuestion = 0;
+               }, 3000);
                break;
          }
+         
       };
 
       const checkAnswer = () => {
@@ -274,7 +244,14 @@ document.addEventListener('click',(event) => {
          checkAnswer();
          numberQuestion++;
          renderQuestions(numberQuestion);
+         firebase
+            .database()
+            .ref()
+            .child('contacts')
+            .push(finalAnswers)
+         console.log(finalAnswers);
       };
+      
    };
 
    
